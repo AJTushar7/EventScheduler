@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angular Calendar Day View</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Angular Calendar Day View</h1>
+            <p>Interactive day-view calendar with event scheduling and overlap detection</p>
+        </header>
+        
+        <main class="app-main">
+            <div class="calendar-day-view">
+                <div class="calendar-header">
+                    <h2 id="current-date">Day View - Today</h2>
+                    <div class="scheduling-controls" id="scheduling-controls" style="display: none;">
+                        <span class="scheduling-info" id="scheduling-info">
+                            Scheduling: <span id="scheduling-time"></span>
+                            <span class="overlap-indicator" id="overlap-indicator">NO CONFLICTS</span>
+                        </span>
+                        <button class="btn btn-confirm" onclick="confirmScheduling()">Confirm</button>
+                        <button class="btn btn-cancel" onclick="cancelScheduling()">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="calendar-grid">
+                    <!-- Time labels column -->
+                    <div class="time-labels" id="time-labels">
+                        <!-- Time slots will be generated here -->
+                    </div>
+
+                    <!-- Events columns -->
+                    <div class="events-container">
+                        <!-- Existing events column -->
+                        <div class="events-column existing-events">
+                            <div class="column-header">Current Events</div>
+                            <div class="events-grid" id="existing-events-grid">
+                                <!-- Existing events will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- New events column -->
+                        <div class="events-column new-events">
+                            <div class="column-header">Scheduled Events</div>
+                            <div class="events-grid" id="new-events-grid">
+                                <!-- New events will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overlap details -->
+                <div class="overlap-details" id="overlap-details" style="display: none;">
+                    <h4>Overlapping Events:</h4>
+                    <ul id="overlap-list"></ul>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="app-footer">
+            <p>Click on any time slot to schedule a new event. Drag to adjust duration.</p>
+        </footer>
+    </div>
+
+    <script src="calendar-app.js"></script>
+</body>
+</html>

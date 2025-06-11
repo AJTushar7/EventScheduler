@@ -5,15 +5,35 @@
   <title>Angular Calendar Day View</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
   
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Import styles -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Import zone.js -->
+  <script src="https://unpkg.com/zone.js@0.15.1/dist/zone.min.js"></script>
+  
+  <!-- Import Angular from CDN -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@angular/core": "https://unpkg.com/@angular/core@19.2.14/esm2022/core.mjs",
+        "@angular/common": "https://unpkg.com/@angular/common@19.2.14/esm2022/common.mjs",
+        "@angular/platform-browser": "https://unpkg.com/@angular/platform-browser@19.2.14/esm2022/platform-browser.mjs",
+        "@angular/platform-browser-dynamic": "https://unpkg.com/@angular/platform-browser-dynamic@19.2.14/esm2022/platform-browser-dynamic.mjs",
+        "rxjs": "https://unpkg.com/rxjs@7.8.2/dist/esm/index.js",
+        "rxjs/operators": "https://unpkg.com/rxjs@7.8.2/dist/esm/operators/index.js"
+      }
+    }
+  </script>
 </head>
 <body>
   <app-root></app-root>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

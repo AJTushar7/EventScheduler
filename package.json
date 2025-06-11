@@ -15,10 +15,10 @@
     "@angular/forms": "^19.2.14",
     "@angular/platform-browser": "^19.2.14",
     "@angular/platform-browser-dynamic": "^19.2.14",
+    "http-server": "^14.1.1",
     "rxjs": "^7.8.2",
     "typescript": "^5.8.3",
     "zone.js": "^0.15.1"
   },
-  "devDependencies": {},
   "description": ""
 }

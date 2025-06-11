@@ -1,10 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { CalendarEvent, TimeSlot, EventPosition, OverlapInfo } from '../../models/event.model';
 import { EventService } from '../../services/event.service';
 
 @Component({
   selector: 'app-calendar-day-view',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './calendar-day-view.component.html',
   styleUrls: ['./calendar-day-view.component.css']
 })
