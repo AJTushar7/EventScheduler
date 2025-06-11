@@ -1,0 +1,107 @@
+<div class="calendar-day-view">
+  <div class="calendar-header">
+    <h2>Day View - {{ selectedDate | date:'fullDate' }}</h2>
+    <div class="scheduling-controls" *ngIf="isScheduling">
+      <span class="scheduling-info">
+        Scheduling: {{ formatTime(schedulingStartTime) }} - {{ formatTime(schedulingEndTime) }}
+        <span class="overlap-indicator" 
+              [class.has-overlap]="currentOverlap.hasOverlap"
+              [class.no-overlap]="!currentOverlap.hasOverlap">
+          {{ currentOverlap.hasOverlap ? 'OVERLAP DETECTED' : 'NO CONFLICTS' }}
+        </span>
+      </span>
+      <button class="btn btn-confirm" (click)="confirmScheduling()">Confirm</button>
+      <button class="btn btn-cancel" (click)="cancelScheduling()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="calendar-grid">
+    <!-- Time labels column -->
+    <div class="time-labels">
+      <div class="time-label" 
+           *ngFor="let slot of timeSlots"
+           [style.height.px]="HOUR_HEIGHT">
+        {{ slot.label }}
+      </div>
+    </div>
+
+    <!-- Events columns -->
+    <div class="events-container">
+      <!-- Existing events column -->
+      <div class="events-column existing-events">
+        <div class="column-header">Current Events</div>
+        <div class="events-grid" 
+             [style.height.px]="timeSlots.length * HOUR_HEIGHT">
+          
+          <!-- Time slot clickable areas -->
+          <div class="time-slot"
+               *ngFor="let slot of timeSlots"
+               [style.height.px]="HOUR_HEIGHT"
+               [style.top.px]="(slot.hour - START_HOUR) * HOUR_HEIGHT"
+               (click)="onTimeSlotClick($event, slot.hour)"
+               (mousemove)="onSchedulingMouseMove($event, slot.hour)">
+          </div>
+
+          <!-- Existing events -->
+          <div class="event existing-event"
+               *ngFor="let event of getExistingEvents()"
+               [ngStyle]="getEventStyle(event)"
+               [title]="event.title + ' (' + formatTime(event.startTime) + ' - ' + formatTime(event.endTime) + ')'">
+            <div class="event-content">
+              <div class="event-title">{{ event.title }}</div>
+              <div class="event-time">
+                {{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Scheduling preview -->
+          <div class="event scheduling-preview"
+               *ngIf="isScheduling && getSchedulingEventPosition()"
+               [ngStyle]="getSchedulingStyle()">
+            <div class="event-content">
+              <div class="event-title">New Event</div>
+              <div class="event-time">
+                {{ formatTime(schedulingStartTime) }} - {{ formatTime(schedulingEndTime) }}
+              </div>
+              <div class="overlap-warning" *ngIf="currentOverlap.hasOverlap">
+                <small>⚠️ Overlaps with {{ currentOverlap.overlappingEvents.length }} event(s)</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New events column -->
+      <div class="events-column new-events">
+        <div class="column-header">Scheduled Events</div>
+        <div class="events-grid" 
+             [style.height.px]="timeSlots.length * HOUR_HEIGHT">
+          
+          <!-- New events -->
+          <div class="event new-event"
+               *ngFor="let event of getNewEvents()"
+               [ngStyle]="getEventStyle(event)"
+               [title]="event.title + ' (' + formatTime(event.startTime) + ' - ' + formatTime(event.endTime) + ')'">
+            <div class="event-content">
+              <div class="event-title">{{ event.title }}</div>
+              <div class="event-time">
+                {{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlap details -->
+  <div class="overlap-details" *ngIf="currentOverlap.hasOverlap">
+    <h4>Overlapping Events:</h4>
+    <ul>
+      <li *ngFor="let event of currentOverlap.overlappingEvents">
+        {{ event.title }} ({{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }})
+      </li>
+    </ul>
+  </div>
+</div>
