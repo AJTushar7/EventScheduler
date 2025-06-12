@@ -1,41 +1,44 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { CalendarEvent, TimeSlot, EventPosition, OverlapInfo } from '../../models/event.model';
 import { EventService } from '../../services/event.service';
+import { CalendarEvent, TimeSlot, EventPosition, OverlapInfo } from '../../models/event.model';
 
 @Component({
   selector: 'app-calendar-day-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './calendar-day-view.component.html',
   styleUrls: ['./calendar-day-view.component.css']
 })
 export class CalendarDayViewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   events: CalendarEvent[] = [];
   timeSlots: TimeSlot[] = [];
   selectedDate: string = new Date().toISOString().split('T')[0];
-  
-  // New event scheduling
+  selectedExecutionTime: string = '11:00';
+  executionDuration: number = 60; // minutes
+
+  // Scheduling state
   isScheduling = false;
   newEvent: Partial<CalendarEvent> = {};
   schedulingStartTime: string = '';
   schedulingEndTime: string = '';
   currentOverlap: OverlapInfo = { hasOverlap: false, overlappingEvents: [] };
-  
-  // Time grid configuration
-  readonly HOUR_HEIGHT = 60; // pixels per hour
+
+  // Constants for positioning - matches vanilla JS exactly
   readonly START_HOUR = 9;   // 9 AM
-  readonly END_HOUR = 18;    // 6 PM
-  readonly PIXEL_PER_MINUTE = this.HOUR_HEIGHT / 60;
+  readonly END_HOUR = 20;    // 8 PM
+  readonly TOTAL_SLOTS = 12; // 12 time slot columns
 
   constructor(private eventService: EventService) {}
 
   ngOnInit(): void {
     this.generateTimeSlots();
     this.loadEvents();
+    this.updateExecutionTime();
   }
 
   ngOnDestroy(): void {
@@ -45,49 +48,68 @@ export class CalendarDayViewComponent implements OnInit, OnDestroy {
 
   private generateTimeSlots(): void {
     this.timeSlots = [];
-    for (let hour = this.START_HOUR; hour <= this.END_HOUR; hour++) {
+    // Generate 12 slots from 9:00 to 20:00
+    for (let hour = this.START_HOUR; hour < this.START_HOUR + this.TOTAL_SLOTS; hour++) {
       this.timeSlots.push({
-        hour,
+        hour: hour,
         label: this.formatHour(hour)
       });
     }
   }
 
   private formatHour(hour: number): string {
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-    return `${displayHour}:00 ${period}`;
+    return `${hour.toString().padStart(2, '0')}:00`;
   }
 
   private loadEvents(): void {
     this.eventService.getEvents()
       .pipe(takeUntil(this.destroy$))
       .subscribe(events => {
-        this.events = events.filter(event => event.date === this.selectedDate);
+        this.events = events;
       });
   }
 
   getExistingEvents(): CalendarEvent[] {
-    return this.events.filter(event => event.type === 'existing');
+    return this.events.filter(event => 
+      event.type === 'existing' && event.date === this.selectedDate
+    );
   }
 
   getNewEvents(): CalendarEvent[] {
-    return this.events.filter(event => event.type === 'new');
+    return this.events.filter(event => 
+      event.type === 'new' && event.date === this.selectedDate
+    );
   }
 
   calculateEventPosition(event: CalendarEvent): EventPosition {
     const startMinutes = this.timeToMinutes(event.startTime);
     const endMinutes = this.timeToMinutes(event.endTime);
-    const duration = endMinutes - startMinutes;
-
-    // Calculate position relative to start hour
-    const startOffset = startMinutes - (this.START_HOUR * 60);
+    
+    const gridStartMinutes = this.START_HOUR * 60; // 9:00 AM (540 minutes)
+    
+    // Calculate which slot the start and end times fall into
+    const relativeStartMinutes = startMinutes - gridStartMinutes;
+    const relativeEndMinutes = endMinutes - gridStartMinutes;
+    
+    // Convert to slot positions (each slot = 60 minutes)
+    const startSlotPosition = relativeStartMinutes / 60; // Position in hours from 9:00
+    const endSlotPosition = relativeEndMinutes / 60; // Position in hours from 9:00
+    
+    // Calculate percentage positions
+    const leftPercent = (startSlotPosition / this.TOTAL_SLOTS) * 100;
+    const widthPercent = ((endSlotPosition - startSlotPosition) / this.TOTAL_SLOTS) * 100;
+    
+    // Ensure bounds are within the grid
+    const finalLeft = Math.max(0, Math.min(leftPercent, 100));
+    const finalWidth = Math.max(0, Math.min(widthPercent, 100 - finalLeft));
+    
+    console.log(`Positioning ${event.startTime}-${event.endTime}: left=${finalLeft.toFixed(2)}%, width=${finalWidth.toFixed(2)}%`);
     
     return {
-      left: 0,
-      width: 100, // Full width of the column
-      top: startOffset * this.PIXEL_PER_MINUTE,
-      height: duration * this.PIXEL_PER_MINUTE
+      left: finalLeft,
+      width: finalWidth,
+      top: 0,
+      height: 100
     };
   }
 
@@ -109,59 +131,91 @@ export class CalendarDayViewComponent implements OnInit, OnDestroy {
   }
 
   private startScheduling(event: MouseEvent, hour: number): void {
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const clickY = event.clientY - rect.top;
-    const minutes = Math.round(clickY / this.PIXEL_PER_MINUTE);
-    const totalMinutes = (hour * 60) + minutes;
-    
-    this.schedulingStartTime = this.minutesToTime(totalMinutes);
-    this.schedulingEndTime = this.minutesToTime(totalMinutes + 60); // Default 1 hour duration
-    
     this.isScheduling = true;
+    const startTime = `${hour.toString().padStart(2, '0')}:00`;
+    this.schedulingStartTime = startTime;
+    this.schedulingEndTime = this.minutesToTime(this.timeToMinutes(startTime) + 60);
     this.checkCurrentOverlap();
   }
 
   onSchedulingMouseMove(event: MouseEvent, hour: number): void {
     if (!this.isScheduling) return;
-
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const clickY = event.clientY - rect.top;
-    const minutes = Math.round(clickY / this.PIXEL_PER_MINUTE);
-    const totalMinutes = (hour * 60) + minutes;
-    const endTime = this.minutesToTime(totalMinutes);
-
-    // Only update if it's after start time
-    if (totalMinutes > this.timeToMinutes(this.schedulingStartTime)) {
-      this.schedulingEndTime = endTime;
-      this.checkCurrentOverlap();
+    
+    // Calculate mouse position relative to the row
+    const rect = (event.target as HTMLElement).closest('.event-row')?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const relativeX = event.clientX - rect.left;
+    const slotWidth = rect.width / this.TOTAL_SLOTS;
+    const slotIndex = Math.floor(relativeX / slotWidth);
+    const targetHour = this.START_HOUR + slotIndex;
+    
+    if (targetHour >= this.START_HOUR && targetHour < this.START_HOUR + this.TOTAL_SLOTS) {
+      const endTime = `${targetHour.toString().padStart(2, '0')}:00`;
+      if (this.timeToMinutes(endTime) > this.timeToMinutes(this.schedulingStartTime)) {
+        this.schedulingEndTime = endTime;
+        this.checkCurrentOverlap();
+      }
     }
   }
 
   private checkCurrentOverlap(): void {
-    if (this.schedulingStartTime && this.schedulingEndTime) {
-      this.currentOverlap = this.eventService.checkOverlap({
-        startTime: this.schedulingStartTime,
-        endTime: this.schedulingEndTime,
-        date: this.selectedDate
-      });
+    if (!this.schedulingStartTime || !this.schedulingEndTime) {
+      this.currentOverlap = { hasOverlap: false, overlappingEvents: [] };
+      return;
     }
+
+    console.log(`Checking conflict for: ${this.schedulingStartTime} to ${this.schedulingEndTime}`);
+    
+    const newStartMinutes = this.timeToMinutes(this.schedulingStartTime);
+    const newEndMinutes = this.timeToMinutes(this.schedulingEndTime);
+    
+    const overlappingEvents: CalendarEvent[] = [];
+    
+    for (const event of this.getExistingEvents()) {
+      console.log(`Existing event: ${event.startTime} to ${event.endTime}`);
+      
+      const existingStartMinutes = this.timeToMinutes(event.startTime);
+      const existingEndMinutes = this.timeToMinutes(event.endTime);
+      
+      console.log(`New event minutes: ${newStartMinutes} to ${newEndMinutes}`);
+      console.log(`Existing event minutes: ${existingStartMinutes} to ${existingEndMinutes}`);
+      
+      // Check for overlap: events overlap if new start < existing end AND new end > existing start
+      const hasOverlap = newStartMinutes < existingEndMinutes && newEndMinutes > existingStartMinutes;
+      console.log(`Overlap check: ${newStartMinutes} < ${existingEndMinutes} && ${newEndMinutes} > ${existingStartMinutes} = ${hasOverlap}`);
+      
+      if (hasOverlap) {
+        console.log('Conflict detected with:', event);
+        overlappingEvents.push(event);
+      }
+    }
+    
+    if (overlappingEvents.length === 0) {
+      console.log('No conflicts detected');
+    }
+    
+    this.currentOverlap = {
+      hasOverlap: overlappingEvents.length > 0,
+      overlappingEvents: overlappingEvents
+    };
   }
 
   confirmScheduling(): void {
-    if (this.schedulingStartTime && this.schedulingEndTime) {
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
-        title: 'New Event',
-        startTime: this.schedulingStartTime,
-        endTime: this.schedulingEndTime,
-        date: this.selectedDate,
-        type: 'new',
-        color: this.currentOverlap.hasOverlap ? '#f44336' : '#4CAF50'
-      };
+    if (!this.isScheduling || this.currentOverlap.hasOverlap) return;
 
-      this.eventService.addEvent(newEvent);
-      this.cancelScheduling();
-    }
+    const newEvent: CalendarEvent = {
+      id: Date.now().toString(),
+      title: 'New Event',
+      startTime: this.schedulingStartTime,
+      endTime: this.schedulingEndTime,
+      date: this.selectedDate,
+      type: 'new',
+      color: '#4CAF50'
+    };
+
+    this.eventService.addEvent(newEvent);
+    this.cancelScheduling();
   }
 
   cancelScheduling(): void {
@@ -176,33 +230,47 @@ export class CalendarDayViewComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    const startMinutes = this.timeToMinutes(this.schedulingStartTime);
-    const endMinutes = this.timeToMinutes(this.schedulingEndTime);
-    const duration = endMinutes - startMinutes;
-    const startOffset = startMinutes - (this.START_HOUR * 60);
-
-    return {
-      left: 0,
-      width: 100,
-      top: startOffset * this.PIXEL_PER_MINUTE,
-      height: duration * this.PIXEL_PER_MINUTE
-    };
+    return this.calculateEventPosition({
+      id: 'temp',
+      title: 'Scheduling',
+      startTime: this.schedulingStartTime,
+      endTime: this.schedulingEndTime,
+      date: this.selectedDate,
+      type: 'new'
+    });
   }
 
   formatTime(time: string): string {
-    const [hours, minutes] = time.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return time;
+  }
+
+  updateExecutionTime(): void {
+    // Calculate execution end time
+    const startMinutes = this.timeToMinutes(this.selectedExecutionTime);
+    const endMinutes = startMinutes + this.executionDuration;
+    const endTime = this.minutesToTime(endMinutes);
+    
+    // Update scheduling times to match execution time
+    this.schedulingStartTime = this.selectedExecutionTime;
+    this.schedulingEndTime = endTime;
+    this.checkCurrentOverlap();
+  }
+
+  getConflictMessage(): string {
+    if (!this.currentOverlap.hasOverlap || this.currentOverlap.overlappingEvents.length === 0) {
+      return '';
+    }
+    
+    const event = this.currentOverlap.overlappingEvents[0];
+    return `This time conflicts with an existing event from ${event.startTime} to ${event.endTime}.`;
   }
 
   getEventStyle(event: CalendarEvent): any {
     const position = this.calculateEventPosition(event);
     return {
-      'top.px': position.top,
-      'height.px': position.height,
-      'background-color': event.color,
-      'border-left': event.type === 'new' && this.currentOverlap.hasOverlap ? '3px solid #f44336' : 'none'
+      left: position.left + '%',
+      width: position.width + '%',
+      backgroundColor: event.color || '#2196F3'
     };
   }
 
@@ -211,10 +279,9 @@ export class CalendarDayViewComponent implements OnInit, OnDestroy {
     if (!position) return {};
 
     return {
-      'top.px': position.top,
-      'height.px': position.height,
-      'background-color': this.currentOverlap.hasOverlap ? 'rgba(244, 67, 54, 0.7)' : 'rgba(76, 175, 80, 0.7)',
-      'border': this.currentOverlap.hasOverlap ? '2px solid #f44336' : '2px solid #4CAF50'
+      left: position.left + '%',
+      width: position.width + '%',
+      backgroundColor: this.currentOverlap.hasOverlap ? '#f44336' : '#4CAF50'
     };
   }
 }

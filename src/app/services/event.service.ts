@@ -17,53 +17,34 @@ export class EventService {
   private loadMockEvents(): void {
     const today = new Date().toISOString().split('T')[0];
     
+    // Match the exact vanilla JS events
     const mockEvents: CalendarEvent[] = [
-      // Provided mock data
       {
         id: '1',
-        title: 'Team Meeting',
-        startTime: '11:00',
-        endTime: '11:30',
+        title: 'Existing Event',
+        startTime: '11:33',
+        endTime: '12:33',
         date: today,
         type: 'existing',
-        color: '#4CAF50'
+        color: '#e3f2fd'
       },
       {
         id: '2',
-        title: 'Client Call',
-        startTime: '13:00',
-        endTime: '13:30',
+        title: 'Existing Event',
+        startTime: '14:07',
+        endTime: '15:07',
         date: today,
         type: 'existing',
-        color: '#2196F3'
+        color: '#e3f2fd'
       },
-      // Additional events for better demonstration
       {
         id: '3',
-        title: 'Project Review',
-        startTime: '09:15',
-        endTime: '10:45',
+        title: 'Existing Event',
+        startTime: '18:30',
+        endTime: '19:30',
         date: today,
         type: 'existing',
-        color: '#FF9800'
-      },
-      {
-        id: '4',
-        title: 'Lunch Break',
-        startTime: '12:00',
-        endTime: '13:00',
-        date: today,
-        type: 'existing',
-        color: '#9C27B0'
-      },
-      {
-        id: '5',
-        title: 'Design Workshop',
-        startTime: '15:30',
-        endTime: '17:00',
-        date: today,
-        type: 'existing',
-        color: '#E91E63'
+        color: '#e3f2fd'
       }
     ];
 
