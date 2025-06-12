@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CalendarDayViewComponent } from './components/calendar-day-view/calendar-day-view.component';
+import { CalendarSchedulerComponent } from './components/calendar-scheduler/calendar-scheduler.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, CalendarDayViewComponent],
+  imports: [CommonModule, CalendarSchedulerComponent],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'Angular Calendar Day View';
+  title = 'Calendar Event Scheduler';
 }

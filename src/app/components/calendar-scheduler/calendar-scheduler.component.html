@@ -1,0 +1,68 @@
+<div class="calendar-container">
+    <!-- Time Conflict Alert -->
+    <div class="conflict-alert" [class.show]="conflict.hasConflict">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+            <strong>Time Conflict:</strong>
+            <p>{{ conflict.message }}</p>
+            <p>Please select a time outside this range.</p>
+        </div>
+    </div>
+
+    <!-- Time Headers -->
+    <div class="time-header">
+        <div class="time-slot" 
+             *ngFor="let slot of timeSlots" 
+             [attr.data-hour]="slot.hour">
+            {{ slot.label }}
+        </div>
+    </div>
+
+    <!-- Event Table -->
+    <div class="event-table">
+        <!-- Existing Events Row -->
+        <div class="event-row existing-row">
+            <div class="row-cell" *ngFor="let slot of timeSlots"></div>
+            <div class="event-block booked" 
+                 *ngFor="let event of getExistingEvents()" 
+                 [ngStyle]="getEventStyle(event)">
+                {{ event.startTime }}-{{ event.endTime }}
+            </div>
+        </div>
+
+        <!-- New Event Row -->
+        <div class="event-row new-row">
+            <div class="row-cell" *ngFor="let slot of timeSlots"></div>
+            <div class="event-block new" 
+                 *ngFor="let event of getNewEvents()" 
+                 [ngStyle]="getEventStyle(event)">
+                {{ event.startTime }}-{{ event.endTime }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Controls -->
+    <div class="execution-controls">
+        <div class="control-group">
+            <label for="execution-time">Execution Start Time</label>
+            <select id="execution-time" 
+                    [(ngModel)]="selectedExecutionTime"
+                    (change)="onExecutionTimeChange()">
+                <option *ngFor="let time of availableTimeSlots" 
+                        [value]="time" 
+                        [selected]="time === '11:00'">
+                    {{ time }}
+                </option>
+            </select>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-cancel" (click)="cancelExecution()">Cancel</button>
+            <button class="btn btn-confirm" 
+                    (click)="confirmExecution()"
+                    [disabled]="conflict.hasConflict">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
