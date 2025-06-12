@@ -21,11 +21,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "http-server src -p 5000 -c-1 --cors"
+args = "http-server . -p 5000 -c-1 --cors"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "http-server src -p 5000 -c-1 --cors"]
+run = ["sh", "-c", "http-server . -p 5000 -c-1 --cors"]
 
 [[ports]]
 localPort = 5000
