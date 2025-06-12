@@ -52,28 +52,33 @@ class CalendarScheduler {
     }
     
     getTimePosition(startTime, endTime) {
-        // Calculate position based on 12-hour grid (9:00 to 20:00) - 11 hours total
+        // We have 12 time slots from 9:00 to 20:00 (each slot = 1 hour = 8.333% width)
         const startMinutes = this.timeToMinutes(startTime);
         const endMinutes = this.timeToMinutes(endTime);
+        
         const gridStartMinutes = 9 * 60; // 9:00 AM (540 minutes)
-        const gridEndMinutes = 20 * 60; // 8:00 PM (1200 minutes)
-        const totalGridMinutes = gridEndMinutes - gridStartMinutes; // 660 minutes (11 hours)
+        const totalGridHours = 11; // From 9:00 to 20:00 (11 hours displayed)
+        const slotWidthPercent = 100 / totalGridHours; // Each hour slot = ~9.09%
         
-        // Calculate relative position from 9:00 AM
-        const relativeStart = Math.max(0, startMinutes - gridStartMinutes);
-        const relativeEnd = Math.min(gridEndMinutes, endMinutes) - gridStartMinutes;
-        const duration = Math.max(0, relativeEnd - relativeStart);
+        // Calculate relative positions in minutes from 9:00 AM
+        const relativeStartMinutes = startMinutes - gridStartMinutes;
+        const relativeEndMinutes = endMinutes - gridStartMinutes;
         
-        // Calculate percentage positions with higher precision
-        const leftPercent = (relativeStart / totalGridMinutes) * 100;
-        const widthPercent = (duration / totalGridMinutes) * 100;
+        // Convert to hours (decimal) for precise positioning
+        const relativeStartHours = relativeStartMinutes / 60;
+        const relativeEndHours = relativeEndMinutes / 60;
         
-        // Ensure minimum width for visibility and maximum bounds
-        const finalWidth = Math.max(1, Math.min(100 - leftPercent, widthPercent));
+        // Calculate percentage positions
+        const leftPercent = (relativeStartHours / totalGridHours) * 100;
+        const widthPercent = ((relativeEndHours - relativeStartHours) / totalGridHours) * 100;
+        
+        // Ensure bounds are within the grid
+        const finalLeft = Math.max(0, Math.min(leftPercent, 100));
+        const finalWidth = Math.max(0, Math.min(widthPercent, 100 - finalLeft));
         
         return {
-            left: `${leftPercent.toFixed(3)}%`,
-            width: `${finalWidth.toFixed(3)}%`
+            left: `${finalLeft.toFixed(2)}%`,
+            width: `${finalWidth.toFixed(2)}%`
         };
     }
     
