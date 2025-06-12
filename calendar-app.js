@@ -3,7 +3,7 @@ class CalendarScheduler {
     constructor() {
         this.events = [];
         this.selectedExecutionTime = '11:00';
-        this.executionDuration = 40; // minutes
+        this.executionDuration = 60; // minutes (1 hour)
         this.currentConflict = null;
         
         this.init();
@@ -17,18 +17,18 @@ class CalendarScheduler {
     }
     
     loadExistingEvents() {
-        // Load existing booked events based on the provided mock data
+        // Load existing booked events with 1-hour intervals and varying start times
         this.events = [
             {
                 id: '1',
-                startTime: '11:00',
-                endTime: '11:30',
+                startTime: '11:33',
+                endTime: '12:33',
                 type: 'booked'
             },
             {
                 id: '2', 
-                startTime: '13:00',
-                endTime: '13:30',
+                startTime: '14:07',
+                endTime: '15:07',
                 type: 'booked'
             },
             {
@@ -52,22 +52,24 @@ class CalendarScheduler {
     }
     
     getTimePosition(startTime, endTime) {
-        // Calculate position based on 12-hour grid (9:00 to 20:00)
+        // Calculate position based on 12-hour grid (9:00 to 20:00) - 11 hours total
         const startMinutes = this.timeToMinutes(startTime);
         const endMinutes = this.timeToMinutes(endTime);
         const gridStartMinutes = 9 * 60; // 9:00 AM
         const gridEndMinutes = 20 * 60; // 8:00 PM
-        const totalGridMinutes = gridEndMinutes - gridStartMinutes;
+        const totalGridMinutes = gridEndMinutes - gridStartMinutes; // 660 minutes (11 hours)
         
+        // Calculate relative position from 9:00 AM
         const relativeStart = startMinutes - gridStartMinutes;
         const duration = endMinutes - startMinutes;
         
-        const leftPercent = (relativeStart / totalGridMinutes) * 100;
-        const widthPercent = (duration / totalGridMinutes) * 100;
+        // Calculate percentage positions with precision
+        const leftPercent = Math.max(0, (relativeStart / totalGridMinutes) * 100);
+        const widthPercent = Math.min(100 - leftPercent, (duration / totalGridMinutes) * 100);
         
         return {
-            left: `${leftPercent}%`,
-            width: `${widthPercent}%`
+            left: `${leftPercent.toFixed(2)}%`,
+            width: `${widthPercent.toFixed(2)}%`
         };
     }
     
@@ -132,6 +134,8 @@ class CalendarScheduler {
         const startMinutes = this.timeToMinutes(startTime);
         const endMinutes = startMinutes + this.executionDuration;
         
+        console.log(`Checking conflict for: ${startTime} to ${this.minutesToTime(endMinutes)}`);
+        
         // Check if new event overlaps with any existing events
         const conflicts = this.events.filter(event => {
             if (event.type !== 'booked') return false;
@@ -139,14 +143,22 @@ class CalendarScheduler {
             const eventStart = this.timeToMinutes(event.startTime);
             const eventEnd = this.timeToMinutes(event.endTime);
             
-            return (startMinutes < eventEnd && endMinutes > eventStart);
+            console.log(`Existing event: ${event.startTime} to ${event.endTime}`);
+            console.log(`Overlap check: ${startMinutes} < ${eventEnd} && ${endMinutes} > ${eventStart}`);
+            
+            const hasOverlap = (startMinutes < eventEnd && endMinutes > eventStart);
+            console.log(`Has overlap: ${hasOverlap}`);
+            
+            return hasOverlap;
         });
         
         if (conflicts.length > 0) {
             this.currentConflict = conflicts[0];
+            console.log('Conflict detected with:', this.currentConflict);
             this.showConflictAlert();
         } else {
             this.currentConflict = null;
+            console.log('No conflicts detected');
             this.hideConflictAlert();
         }
     }
