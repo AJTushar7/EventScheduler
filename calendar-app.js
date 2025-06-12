@@ -12,8 +12,8 @@ class CalendarScheduler {
     init() {
         this.loadExistingEvents();
         this.renderExistingEvents();
-        this.updateNewEventPreview();
         this.checkForConflicts();
+        this.updateNewEventPreview();
     }
     
     loadExistingEvents() {
@@ -55,21 +55,25 @@ class CalendarScheduler {
         // Calculate position based on 12-hour grid (9:00 to 20:00) - 11 hours total
         const startMinutes = this.timeToMinutes(startTime);
         const endMinutes = this.timeToMinutes(endTime);
-        const gridStartMinutes = 9 * 60; // 9:00 AM
-        const gridEndMinutes = 20 * 60; // 8:00 PM
+        const gridStartMinutes = 9 * 60; // 9:00 AM (540 minutes)
+        const gridEndMinutes = 20 * 60; // 8:00 PM (1200 minutes)
         const totalGridMinutes = gridEndMinutes - gridStartMinutes; // 660 minutes (11 hours)
         
         // Calculate relative position from 9:00 AM
-        const relativeStart = startMinutes - gridStartMinutes;
-        const duration = endMinutes - startMinutes;
+        const relativeStart = Math.max(0, startMinutes - gridStartMinutes);
+        const relativeEnd = Math.min(gridEndMinutes, endMinutes) - gridStartMinutes;
+        const duration = Math.max(0, relativeEnd - relativeStart);
         
-        // Calculate percentage positions with precision
-        const leftPercent = Math.max(0, (relativeStart / totalGridMinutes) * 100);
-        const widthPercent = Math.min(100 - leftPercent, (duration / totalGridMinutes) * 100);
+        // Calculate percentage positions with higher precision
+        const leftPercent = (relativeStart / totalGridMinutes) * 100;
+        const widthPercent = (duration / totalGridMinutes) * 100;
+        
+        // Ensure minimum width for visibility and maximum bounds
+        const finalWidth = Math.max(1, Math.min(100 - leftPercent, widthPercent));
         
         return {
-            left: `${leftPercent.toFixed(2)}%`,
-            width: `${widthPercent.toFixed(2)}%`
+            left: `${leftPercent.toFixed(3)}%`,
+            width: `${finalWidth.toFixed(3)}%`
         };
     }
     
@@ -136,31 +140,34 @@ class CalendarScheduler {
         
         console.log(`Checking conflict for: ${startTime} to ${this.minutesToTime(endMinutes)}`);
         
+        // Reset conflict state
+        this.currentConflict = null;
+        
         // Check if new event overlaps with any existing events
-        const conflicts = this.events.filter(event => {
-            if (event.type !== 'booked') return false;
+        for (const event of this.events) {
+            if (event.type !== 'booked') continue;
             
             const eventStart = this.timeToMinutes(event.startTime);
             const eventEnd = this.timeToMinutes(event.endTime);
             
             console.log(`Existing event: ${event.startTime} to ${event.endTime}`);
-            console.log(`Overlap check: ${startMinutes} < ${eventEnd} && ${endMinutes} > ${eventStart}`);
+            console.log(`New event minutes: ${startMinutes} to ${endMinutes}`);
+            console.log(`Existing event minutes: ${eventStart} to ${eventEnd}`);
             
+            // Overlap occurs when: new_start < existing_end AND new_end > existing_start
             const hasOverlap = (startMinutes < eventEnd && endMinutes > eventStart);
-            console.log(`Has overlap: ${hasOverlap}`);
+            console.log(`Overlap check: ${startMinutes} < ${eventEnd} && ${endMinutes} > ${eventStart} = ${hasOverlap}`);
             
-            return hasOverlap;
-        });
-        
-        if (conflicts.length > 0) {
-            this.currentConflict = conflicts[0];
-            console.log('Conflict detected with:', this.currentConflict);
-            this.showConflictAlert();
-        } else {
-            this.currentConflict = null;
-            console.log('No conflicts detected');
-            this.hideConflictAlert();
+            if (hasOverlap) {
+                this.currentConflict = event;
+                console.log('Conflict detected with:', this.currentConflict);
+                this.showConflictAlert();
+                return; // Exit early on first conflict
+            }
         }
+        
+        console.log('No conflicts detected');
+        this.hideConflictAlert();
     }
     
     showConflictAlert() {
@@ -186,8 +193,8 @@ class CalendarScheduler {
     updateExecutionTime() {
         const select = document.getElementById('execution-time');
         this.selectedExecutionTime = select.value;
-        this.updateNewEventPreview();
         this.checkForConflicts();
+        this.updateNewEventPreview();
     }
 }
 
