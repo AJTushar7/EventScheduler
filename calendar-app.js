@@ -73,7 +73,9 @@ class CalendarScheduler {
     
     renderExistingEvents() {
         const container = document.getElementById('existing-events');
-        container.innerHTML = '';
+        // Clear existing event blocks but keep the cells
+        const existingBlocks = container.querySelectorAll('.event-block');
+        existingBlocks.forEach(block => block.remove());
         
         this.events.forEach(event => {
             if (event.type === 'booked') {
@@ -82,6 +84,8 @@ class CalendarScheduler {
                 eventBlock.className = 'event-block booked';
                 eventBlock.style.left = position.left;
                 eventBlock.style.width = position.width;
+                eventBlock.style.top = '8px';
+                eventBlock.style.height = '64px';
                 
                 eventBlock.innerHTML = `
                     <div class="event-label">Booked</div>
@@ -95,7 +99,9 @@ class CalendarScheduler {
     
     updateNewEventPreview() {
         const container = document.getElementById('new-events');
-        container.innerHTML = '';
+        // Clear existing event blocks but keep the cells
+        const existingBlocks = container.querySelectorAll('.event-block');
+        existingBlocks.forEach(block => block.remove());
         
         const startTime = this.selectedExecutionTime;
         const startMinutes = this.timeToMinutes(startTime);
@@ -109,6 +115,8 @@ class CalendarScheduler {
         eventBlock.className = hasConflict ? 'event-block conflict' : 'event-block new-time';
         eventBlock.style.left = position.left;
         eventBlock.style.width = position.width;
+        eventBlock.style.top = '8px';
+        eventBlock.style.height = '64px';
         
         const label = hasConflict ? 'Time Conflict' : 'New Time';
         eventBlock.innerHTML = `
