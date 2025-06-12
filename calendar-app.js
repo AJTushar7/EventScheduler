@@ -52,29 +52,34 @@ class CalendarScheduler {
     }
     
     getTimePosition(startTime, endTime) {
-        // We have 12 time slots from 9:00 to 20:00 (each slot = 1 hour = 8.333% width)
+        // We have 12 time slots from 9:00 to 20:00 
+        // Slots: 9:00, 10:00, 11:00, 12:00, 13:00, 14:00, 15:00, 16:00, 17:00, 18:00, 19:00, 20:00
+        // That's 12 equal columns, each representing 1 hour
         const startMinutes = this.timeToMinutes(startTime);
         const endMinutes = this.timeToMinutes(endTime);
         
         const gridStartMinutes = 9 * 60; // 9:00 AM (540 minutes)
-        const totalGridHours = 11; // From 9:00 to 20:00 (11 hours displayed)
-        const slotWidthPercent = 100 / totalGridHours; // Each hour slot = ~9.09%
+        const gridEndMinutes = 20 * 60; // 8:00 PM (1200 minutes) 
+        const totalSlots = 12; // We have 12 time slot columns
+        const slotWidthPercent = 100 / totalSlots; // Each slot = 8.333%
         
-        // Calculate relative positions in minutes from 9:00 AM
+        // Calculate which slot the start and end times fall into
         const relativeStartMinutes = startMinutes - gridStartMinutes;
         const relativeEndMinutes = endMinutes - gridStartMinutes;
         
-        // Convert to hours (decimal) for precise positioning
-        const relativeStartHours = relativeStartMinutes / 60;
-        const relativeEndHours = relativeEndMinutes / 60;
+        // Convert to slot positions (each slot = 60 minutes)
+        const startSlotPosition = relativeStartMinutes / 60; // Position in hours from 9:00
+        const endSlotPosition = relativeEndMinutes / 60; // Position in hours from 9:00
         
         // Calculate percentage positions
-        const leftPercent = (relativeStartHours / totalGridHours) * 100;
-        const widthPercent = ((relativeEndHours - relativeStartHours) / totalGridHours) * 100;
+        const leftPercent = (startSlotPosition / totalSlots) * 100;
+        const widthPercent = ((endSlotPosition - startSlotPosition) / totalSlots) * 100;
         
         // Ensure bounds are within the grid
         const finalLeft = Math.max(0, Math.min(leftPercent, 100));
         const finalWidth = Math.max(0, Math.min(widthPercent, 100 - finalLeft));
+        
+        console.log(`Positioning ${startTime}-${endTime}: left=${finalLeft.toFixed(2)}%, width=${finalWidth.toFixed(2)}%`);
         
         return {
             left: `${finalLeft.toFixed(2)}%`,
