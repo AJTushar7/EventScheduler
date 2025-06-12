@@ -15,8 +15,10 @@ body {
 }
 
 .calendar-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  min-width: 900px;
+  padding: 0 20px;
 }
 
 /* Conflict Alert */
@@ -59,6 +61,8 @@ body {
   border: 1px solid #e0e0e0;
   border-bottom: none;
   margin-bottom: 0;
+  min-width: 900px;
+  overflow-x: auto;
 }
 
 .time-header .time-slot {
@@ -69,6 +73,7 @@ body {
   font-weight: 500;
   color: #333;
   border-right: 1px solid #e0e0e0;
+  min-width: 75px;
 }
 
 .time-header .time-slot:last-child {
@@ -79,6 +84,8 @@ body {
 .event-table {
   border: 1px solid #e0e0e0;
   border-top: none;
+  min-width: 900px;
+  overflow-x: auto;
 }
 
 .event-row {
@@ -86,6 +93,7 @@ body {
   height: 80px;
   border-bottom: 1px solid #e0e0e0;
   position: relative;
+  min-width: 900px;
 }
 
 .event-row:last-child {
@@ -105,6 +113,7 @@ body {
   border-right: 1px solid #e0e0e0;
   position: relative;
   padding: 0;
+  min-width: 75px;
 }
 
 .row-cell:last-child {
@@ -114,7 +123,7 @@ body {
 /* Event Blocks */
 .event-block {
   position: absolute;
-  height: 64px;
+  height: 72px;
   border-radius: 6px;
   padding: 8px 12px;
   color: white;
@@ -125,6 +134,7 @@ body {
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: 2;
+  top: 4px;
 }
 
 .event-block.booked {
@@ -217,14 +227,59 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .time-header {
-    grid-template-columns: repeat(6, 1fr);
-    font-size: 12px;
+@media (max-width: 1200px) {
+  .calendar-container {
+    padding: 0 10px;
   }
   
   .time-header .time-slot {
-    padding: 8px 4px;
+    min-width: 65px;
+    padding: 12px 6px;
+  }
+  
+  .row-cell {
+    min-width: 65px;
+  }
+  
+  .event-table {
+    min-width: 780px;
+  }
+  
+  .event-row {
+    min-width: 780px;
+  }
+  
+  .time-header {
+    min-width: 780px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-container {
+    min-width: 700px;
+    padding: 0 5px;
+  }
+  
+  .time-header .time-slot {
+    min-width: 58px;
+    font-size: 12px;
+    padding: 10px 4px;
+  }
+  
+  .row-cell {
+    min-width: 58px;
+  }
+  
+  .event-table {
+    min-width: 700px;
+  }
+  
+  .event-row {
+    min-width: 700px;
+  }
+  
+  .time-header {
+    min-width: 700px;
   }
   
   .execution-controls {
@@ -239,7 +294,7 @@ body {
   
   .event-block {
     font-size: 10px;
-    padding: 4px 8px;
+    padding: 6px 8px;
   }
 }
 

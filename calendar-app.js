@@ -100,8 +100,8 @@ class CalendarScheduler {
                 eventBlock.className = 'event-block booked';
                 eventBlock.style.left = position.left;
                 eventBlock.style.width = position.width;
-                eventBlock.style.top = '8px';
-                eventBlock.style.height = '64px';
+                eventBlock.style.top = '4px';
+                eventBlock.style.height = '72px';
                 
                 eventBlock.innerHTML = `
                     <div class="event-label">Booked</div>
@@ -131,8 +131,8 @@ class CalendarScheduler {
         eventBlock.className = hasConflict ? 'event-block conflict' : 'event-block new-time';
         eventBlock.style.left = position.left;
         eventBlock.style.width = position.width;
-        eventBlock.style.top = '8px';
-        eventBlock.style.height = '64px';
+        eventBlock.style.top = '4px';
+        eventBlock.style.height = '72px';
         
         const label = hasConflict ? 'Time Conflict' : 'New Time';
         eventBlock.innerHTML = `
