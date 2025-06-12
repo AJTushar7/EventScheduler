@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { CalendarEvent, TimeSlot, EventPosition, OverlapInfo } from '../../models/event.model';
@@ -8,7 +7,7 @@ import { CalendarEvent, TimeSlot, EventPosition, OverlapInfo } from '../../model
 @Component({
   selector: 'app-calendar-day-view',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './calendar-day-view.component.html',
   styleUrls: ['./calendar-day-view.component.css']
 })
@@ -254,6 +253,12 @@ export class CalendarDayViewComponent implements OnInit, OnDestroy {
     this.schedulingStartTime = this.selectedExecutionTime;
     this.schedulingEndTime = endTime;
     this.checkCurrentOverlap();
+  }
+
+  onExecutionTimeChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.selectedExecutionTime = target.value;
+    this.updateExecutionTime();
   }
 
   getConflictMessage(): string {

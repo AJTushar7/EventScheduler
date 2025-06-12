@@ -66,7 +66,7 @@
   <div class="execution-controls">
     <div class="control-group">
       <label for="execution-time">Execution Start Time</label>
-      <select id="execution-time" [(ngModel)]="selectedExecutionTime" (change)="updateExecutionTime()">
+      <select id="execution-time" [value]="selectedExecutionTime" (change)="onExecutionTimeChange($event)">
         <option value="09:00">09:00</option>
         <option value="09:15">09:15</option>
         <option value="09:30">09:30</option>
